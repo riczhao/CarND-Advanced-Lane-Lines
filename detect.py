@@ -83,6 +83,8 @@ class Image(object):
         M = cv2.getPerspectiveTransform(src, dst)
         self.RM = cv2.getPerspectiveTransform(dst, src)
         self.M = M
+    def checkColor(self, color):
+        pass
     @classmethod
     def rgbGrad(cls,img,min=21.814):
         order=7
@@ -135,7 +137,7 @@ class Image(object):
         plt.show()
         '''
     def detectLaneStart(self):
-        hist_th = 80
+        hist_th = 6300
         hit = False
         left_regions = [] # (Xstart, Xend, Xmax)
         right_regions = []
@@ -179,8 +181,12 @@ class Image(object):
                     hit = False
                 else:
                     continue
-        self.left_lane_start = left_regions[0][2]
-        self.right_lane_start = right_regions[0][2]
+        self.left_lane_start = np.argmax(hist[300:640]) + 300
+        self.right_lane_start = np.argmax(hist[640:980]) + 640
+        #self.left_lane_start = left_regions[0][2]
+        #self.right_lane_start = right_regions[0][2]
+        if self.right_lane_start-self.left_lane_start < 100:
+            print('hit')
  
     def detectLanes(self):
         global idx
@@ -189,6 +195,7 @@ class Image(object):
         self.perspectiveMatrix()
         self.img_flat = cv2.warpPerspective(self.img, self.M, self.flat_shape)
         self.img_bin,self.img_rgbGrad = Image.rgbGrad(self.img_flat)
+        self.img_bin = self.img_rgbGrad
         self.grad_hist = np.sum(self.img_bin[self.img_bin.shape[0]//2:], axis=0)
         self.detectLaneStart()
         self.left_points = self.slideWindow(self.left_lane_start)
@@ -228,13 +235,13 @@ class Image(object):
         return points of lane line
         '''
         bin = self.img_bin
-        win_w = 100
+        win_w = 50
         win_h = 50
         points = []
         points.append((start, bin.shape[0]-1))
         win_mid = start
-        win_thr = 15
-        for y in range(bin.shape[0]-1,win_h,-win_h):
+        win_thr = 800
+        for y in range(bin.shape[0]-1,bin.shape[0]//2,-win_h):
             win = bin[y-win_h:y, win_mid-win_w:win_mid+win_w]
             sum = np.sum(win,axis=0)
             if len(sum)==0:
@@ -268,6 +275,7 @@ class Image(object):
     def showImages(self):
         self.detectLanes()
         bin = np.dstack([self.img_bin,self.img_bin,self.img_bin])
+        bin = bin/bin.max()
         for pt in self.left_points:
             cv2.circle(bin, pt, 10, (1.,0,0), 5)
         for pt in self.right_points:
@@ -281,9 +289,9 @@ class Image(object):
         plt.subplot(2,3,3)
         plt.imshow(self.img_rgbGrad,cmap='gray')
         plt.subplot(2,3,4)
-        plt.imshow(bin,cmap='gray')
+        plt.imshow(bin)
         plt.subplot(2,3,5)
-        plt.plot(hist)
+        plt.plot(self.grad_hist)
         plt.subplot(2,3,6)
         plt.imshow(self.img_marked)
         plt.show()
@@ -300,12 +308,20 @@ def markVideo(fn):
     white_clip.write_videofile(white_output, audio=False)
 
 if __name__ == '__main__':
-    #img = Image('test_images/straight_lines2.jpg')
-    Image('test_images/test2.jpg').showImages()
-    Image('test_images/test1.jpg').showImages()
-    Image('test_images/test3.jpg').showImages()
-    Image('test_images/test4.jpg').showImages()
-    Image('test_images/test5.jpg').showImages()
-    Image('test_images/test6.jpg').showImages()
-    #markVideo('project_video.mp4')
+    test = True
+    if test:
+        #img = Image('test_images/straight_lines2.jpg')
+        Image('1.jpg').showImages()
+        Image('2.jpg').showImages()
+        Image('3.jpg').showImages()
+        Image('4.jpg').showImages()
+        Image('5.jpg').showImages()
+        Image('test_images/test1.jpg').showImages()
+        Image('test_images/test2.jpg').showImages()
+        Image('test_images/test3.jpg').showImages()
+        Image('test_images/test4.jpg').showImages()
+        Image('test_images/test5.jpg').showImages()
+        Image('test_images/test6.jpg').showImages()
+    else:
+        markVideo('project_video.mp4')
     print('end')
