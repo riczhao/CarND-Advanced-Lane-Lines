@@ -3,6 +3,7 @@ from os import listdir
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+from sqlalchemy.sql.expression import false
 
 idx = 1
 
@@ -38,6 +39,7 @@ class Image(object):
             self.img = img
         self.top_clip = 0
         self.img = self.img[self.top_clip:,:,:]
+        self.useLast = True
 
     camera_mtx,camera_dist = calibrateCamera()
 
@@ -187,6 +189,7 @@ class Image(object):
         #self.right_lane_start = right_regions[0][2]
         if self.right_lane_start-self.left_lane_start < 100:
             print('hit')
+            self.useLast = True
  
     def detectLanes(self):
         global idx
@@ -202,6 +205,9 @@ class Image(object):
         self.right_points = self.slideWindow(self.right_lane_start)
         left_fit,left_points = self.polynomial(self.left_points)
         right_fit,right_points = self.polynomial(self.right_points)
+        if np.absolute((right_points[-1][0] - left_points[-1][0]) - (right_points[0][0] - left_points[0][0])) > 150:
+            print('w hit')
+            self.useLast = True
         self.img_marked = self.markImg(left_points, right_points)
         return
 
@@ -241,7 +247,7 @@ class Image(object):
         points.append((start, bin.shape[0]-1))
         win_mid = start
         win_thr = 800
-        for y in range(bin.shape[0]-1,bin.shape[0]//2,-win_h):
+        for y in range(bin.shape[0]-1,win_h,-win_h):
             win = bin[y-win_h:y, win_mid-win_w:win_mid+win_w]
             sum = np.sum(win,axis=0)
             if len(sum)==0:
@@ -265,7 +271,14 @@ class Image(object):
         points = np.int32([np.vstack([fitx,ploty]).T])
         #cv2.polylines(bin, points, False, (1.,0,0), 10)
         return fit,points[0]
+    left_points = None
     def markImg(self, left_points, right_points):
+        if self.useLast and Image.left_points:
+            left_points = Image.left_points
+            right_points = Image.right_points
+        if not self.useLast:
+            Image.left_points = left_points
+            Image.right_points = right_points
         mask = np.zeros((720*2,1280,3),dtype=np.uint8)
         polygon = np.concatenate((left_points,right_points[::-1]))
         cv2.fillPoly(mask, np.int_([polygon]), (0,255,0))
@@ -308,10 +321,12 @@ def markVideo(fn):
     white_clip.write_videofile(white_output, audio=False)
 
 if __name__ == '__main__':
-    test = True
+    test = False
     if test:
         #img = Image('test_images/straight_lines2.jpg')
-        Image('1.jpg').showImages()
+        for i in range(1,10):
+            Image('t'+str(i)+'.jpg').showImages()
+        Image('t1.jpg').showImages()
         Image('2.jpg').showImages()
         Image('3.jpg').showImages()
         Image('4.jpg').showImages()
