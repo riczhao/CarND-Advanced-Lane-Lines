@@ -192,7 +192,7 @@ class Image(object):
             self.useLast = True
  
     def curverad(self, fit, y):
-        return ((1 + (2*fit[0]*y + fit[1])**2)**1.5) / np.absolute(2*fit[0])
+        return ((1 + (2*fit[0]*y + fit[1])**2)**1.5) / np.absolute(2*fit[0]) * 0.0077244
 
     def detectLanes(self):
         global idx
@@ -211,6 +211,10 @@ class Image(object):
         if np.absolute((right_points[-1][0] - left_points[-1][0]) - (right_points[0][0] - left_points[0][0])) > 150:
             print('w hit')
             self.useLast = True
+        self.left_fit = left_fit
+        self.right_fit = right_fit
+        self.curve = (self.curverad(left_fit, 1200) + self.curverad(right_fit, 1200))/2
+        self.offset = ((right_points[-1][0]+left_points[-1][0])/2 -  740) * 0.0077244
         self.img_marked = self.markImg(left_points, right_points)
         self.left_poly_points = left_points
         self.right_poly_points = right_points
@@ -289,7 +293,16 @@ class Image(object):
         cv2.fillPoly(mask, np.int_([polygon]), (0,255,0))
         #plt.imshow(mask)
         overlay = cv2.warpPerspective(mask, self.RM, (self.img.shape[1],self.img.shape[0]))
-        return cv2.addWeighted(self.img,1,overlay,0.3,0)
+        img = cv2.addWeighted(self.img,1,overlay,0.3,0)
+        cv2.putText(img, 'Radius of Curvature = {}(m)'.format(int(self.curve)),
+                    (30,30), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0,0,0))
+        if self.offset < 0:
+            cv2.putText(img, 'Vehicle is {:10.4f}(m) left of center'.format(np.absolute(self.offset)),
+                    (30,90), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0,0,0))
+        else:
+            cv2.putText(img, 'Vehicle is {:10.4f}(m) right of center'.format(np.absolute(self.offset)),
+                    (30,90), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0,0,0))
+        return img
     def showImages(self):
         self.detectLanes()
         bin = np.dstack([self.img_bin,self.img_bin,self.img_bin])
@@ -328,7 +341,7 @@ def markVideo(fn):
     white_clip.write_videofile(white_output, audio=False)
 
 if __name__ == '__main__':
-    test = True
+    test = False
     if test:
         Image('test_images/test1.jpg').showImages()
         img = Image('test_images/straight_lines2.jpg').showImages()
