@@ -191,6 +191,9 @@ class Image(object):
             print('hit')
             self.useLast = True
  
+    def curverad(self, fit, y):
+        return ((1 + (2*fit[0]*y + fit[1])**2)**1.5) / np.absolute(2*fit[0])
+
     def detectLanes(self):
         global idx
         self.flat_shape = (1280,720*2)
@@ -209,6 +212,8 @@ class Image(object):
             print('w hit')
             self.useLast = True
         self.img_marked = self.markImg(left_points, right_points)
+        self.left_poly_points = left_points
+        self.right_poly_points = right_points
         return
 
         '''
@@ -293,6 +298,8 @@ class Image(object):
             cv2.circle(bin, pt, 10, (1.,0,0), 5)
         for pt in self.right_points:
             cv2.circle(bin, pt, 10, (0,1.0,0), 5)
+        cv2.polylines(bin, np.int32([self.left_poly_points]), False, (1.,0,0), 5)
+        cv2.polylines(bin, np.int32([self.right_poly_points]), False, (0,1.,0), 5)
         hist = np.sum(self.img_rgbGrad[self.img_rgbGrad.shape[0]//2:], axis=0)
 
         plt.subplot(2,3,1)
@@ -321,9 +328,10 @@ def markVideo(fn):
     white_clip.write_videofile(white_output, audio=False)
 
 if __name__ == '__main__':
-    test = False
+    test = True
     if test:
-        #img = Image('test_images/straight_lines2.jpg')
+        Image('test_images/test1.jpg').showImages()
+        img = Image('test_images/straight_lines2.jpg').showImages()
         for i in range(1,10):
             Image('t'+str(i)+'.jpg').showImages()
         Image('t1.jpg').showImages()
