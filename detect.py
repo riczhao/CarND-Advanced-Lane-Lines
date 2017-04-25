@@ -39,7 +39,7 @@ class Image(object):
             self.img = img
         self.top_clip = 0
         self.img = self.img[self.top_clip:,:,:]
-        self.useLast = True
+        self.useLast = False
 
     camera_mtx,camera_dist = calibrateCamera()
 
@@ -208,7 +208,7 @@ class Image(object):
         self.right_points = self.slideWindow(self.right_lane_start)
         left_fit,left_points = self.polynomial(self.left_points)
         right_fit,right_points = self.polynomial(self.right_points)
-        if np.absolute((right_points[-1][0] - left_points[-1][0]) - (right_points[0][0] - left_points[0][0])) > 150:
+        if np.absolute((right_points[-1][0] - left_points[-1][0]) - (right_points[0][0] - left_points[0][0])) > 50:
             print('w hit')
             self.useLast = True
         self.left_fit = left_fit
@@ -282,7 +282,7 @@ class Image(object):
         return fit,points[0]
     left_points = None
     def markImg(self, left_points, right_points):
-        if self.useLast and Image.left_points:
+        if self.useLast and Image.left_points is not None:
             left_points = Image.left_points
             right_points = Image.right_points
         if not self.useLast:
