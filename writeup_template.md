@@ -7,7 +7,7 @@
 [image0]: ./examples/overview.png "overview"
 [image1]: ./examples/my_undistort_output.png "Undistorted"
 [image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/rbgGradient.png "rgb gradient Example"
+[image3]: ./examples/rgbGradient.png "rgb gradient Example"
 [image4]: ./examples/my_warp.png "Warp Example"
 [image5]: ./examples/poly.png "Fit Visual"
 [image6]: ./examples/marked.png "Output"
@@ -110,7 +110,7 @@ I implemented this step in `Image.markImg()`.  Here is an example of my result o
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./mark_project_video.mp4)
 
 ---
 
@@ -118,5 +118,8 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I used 200pixels at first for slide window width, but lane points are easy to go to noisy area. Then I changed it to 100, which is better.
+I first tried binary image, but binary image lost enlarge noise. So I moved to use gradient image directly.
+
+
 
