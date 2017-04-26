@@ -121,5 +121,7 @@ Here's a [link to my video result](./mark_project_video.mp4)
 I used 200pixels at first for slide window width, but lane points are easy to go to noisy area. Then I changed it to 100, which is better.
 I first tried binary image, but binary image lost enlarge noise. So I moved to use gradient image directly.
 
+There' still much noise. If only check yelow and white color, it'll be better.
 
+Another optimization is, if it only detects one lance line, we can guess the other line.
 

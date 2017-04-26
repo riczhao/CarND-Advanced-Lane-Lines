@@ -213,7 +213,7 @@ class Image(object):
             self.useLast = True
         self.left_fit = left_fit
         self.right_fit = right_fit
-        self.curve = (self.curverad(left_fit, 1200) + self.curverad(right_fit, 1200))/2
+        self.curve = self.curverad(right_fit, 1200) * 10
         self.offset = ((right_points[-1][0]+left_points[-1][0])/2 -  740) * 0.0077244
         self.img_marked = self.markImg(left_points, right_points)
         self.left_poly_points = left_points
